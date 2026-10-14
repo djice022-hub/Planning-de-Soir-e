@@ -40,9 +40,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .gradient-dj-border {
-            border-image: linear-gradient(135deg, #8a1c91, #d49b28) 1;
-        }
         .bg-dj-card {
             background: rgba(20, 5, 22, 0.85);
             backdrop-filter: blur(12px);
@@ -78,16 +75,14 @@
                 <div class="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-slate-800">
                     <span>Destinataire : <strong class="text-djgold-400">djice022@gmail.com</strong></span>
                 </div>
-                <div id="modal-preview" class="text-xs font-mono text-slate-300 max-h-48 overflow-y-auto whitespace-pre-wrap pt-1">
-                    <!-- Dynamic preview text -->
-                </div>
+                <div id="modal-preview" class="text-xs font-mono text-slate-300 max-h-48 overflow-y-auto whitespace-pre-wrap pt-1"></div>
             </div>
 
             <div class="space-y-3">
-                <a id="btn-open-mailto" href="#" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-djpurple-600 via-djpurple-500 to-djgold-500 hover:opacity-95 text-white font-bold text-sm shadow-lg shadow-djpurple-600/30 flex items-center justify-center gap-2.5 transition-all text-center">
+                <button onclick="sendEmailDirect()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-djpurple-600 via-djpurple-500 to-djgold-500 hover:opacity-95 text-white font-bold text-sm shadow-lg shadow-djpurple-600/30 flex items-center justify-center gap-2.5 transition-all text-center">
                     <i data-lucide="mail" class="w-4 h-4"></i>
-                    <span>Ouvrir dans ma boîte mail</span>
-                </a>
+                    <span>Ouvrir mon application mail</span>
+                </button>
 
                 <button onclick="copyMailBody()" class="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-800 flex items-center justify-center gap-2 transition-all">
                     <i data-lucide="copy" class="w-4 h-4 text-djgold-400"></i>
@@ -100,8 +95,7 @@
     <!-- Application Header -->
     <header class="border-b border-djpurple-700/40 bg-black/90 backdrop-blur-xl sticky top-0 z-40">
         <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-            </div>
+            <div class="flex items-center gap-3"></div>
         </div>
     </header>
 
@@ -198,9 +192,7 @@
                 </button>
             </div>
 
-            <div id="steps-container" class="space-y-3.5">
-                <!-- Injected dynamically -->
-            </div>
+            <div id="steps-container" class="space-y-3.5"></div>
 
             <div class="pt-2">
                 <button onclick="addStep()" class="w-full py-3.5 rounded-2xl border border-dashed border-slate-800 hover:border-djgold-500/50 text-slate-400 hover:text-djgold-400 text-xs font-medium transition-all flex items-center justify-center gap-2 bg-black/40">
@@ -240,7 +232,6 @@
     <script>
         const DJ_EMAIL = "djice022@gmail.com";
 
-        // Default presets for ultra-simple client onboarding
         const templates = {
             mariage: [
                 { time: "18:00", title: "Cocktail / Vin d'honneur", song: "Ambiance Lounge & Soft Pop", note: "Musique douce en extérieur" },
@@ -265,7 +256,6 @@
 
         let currentSteps = [];
 
-        // App Initialization
         window.addEventListener('DOMContentLoaded', () => {
             loadSavedData();
             lucide.createIcons();
@@ -294,13 +284,7 @@
             const date = document.getElementById('event-date').value;
             const location = document.getElementById('event-location').value;
 
-            const payload = {
-                names,
-                date,
-                location,
-                steps: currentSteps
-            };
-
+            const payload = { names, date, location, steps: currentSteps };
             localStorage.setItem('dj_ice_client_planning', JSON.stringify(payload));
         }
 
@@ -361,12 +345,7 @@
             if (currentSteps.length > 0) {
                 lastTime = currentSteps[currentSteps.length - 1].time;
             }
-            currentSteps.push({
-                time: lastTime,
-                title: "Nouveau moment",
-                song: "",
-                note: ""
-            });
+            currentSteps.push({ time: lastTime, title: "Nouveau moment", song: "", note: "" });
             renderSteps();
             saveData();
         }
@@ -377,7 +356,6 @@
             saveData();
         }
 
-        // Email Summary Generation
         function buildEmailContent() {
             const names = document.getElementById('client-names').value || 'Client';
             const date = document.getElementById('event-date').value || 'Non précisée';
@@ -407,12 +385,7 @@
 
         function openEmailModal() {
             const { subject, text } = buildEmailContent();
-            
             document.getElementById('modal-preview').textContent = text;
-            
-            const mailtoUrl = `mailto:${DJ_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
-            document.getElementById('btn-open-mailto').href = mailtoUrl;
-
             document.getElementById('email-modal').classList.remove('hidden');
         }
 
@@ -420,17 +393,38 @@
             document.getElementById('email-modal').classList.add('hidden');
         }
 
+        function sendEmailDirect() {
+            const { subject, text } = buildEmailContent();
+            const mailtoUrl = `mailto:${DJ_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+            window.location.href = mailtoUrl;
+        }
+
         function copyMailBody() {
             const { text } = buildEmailContent();
             
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast("Texte copié ! Vous pouvez le coller dans votre e-mail.");
+                }).catch(() => {
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
             const tempInput = document.createElement("textarea");
             tempInput.value = text;
             document.body.appendChild(tempInput);
             tempInput.select();
-            document.execCommand("copy");
+            try {
+                document.execCommand("copy");
+                showToast("Texte copié ! Vous pouvez le coller dans votre e-mail.");
+            } catch (err) {
+                showToast("Erreur lors de la copie.");
+            }
             document.body.removeChild(tempInput);
-
-            showToast("Texte copié ! Vous pouvez le coller dans votre e-mail.");
         }
 
         function showToast(msg) {
