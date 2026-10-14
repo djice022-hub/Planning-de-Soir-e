@@ -44,6 +44,11 @@
             background: rgba(20, 5, 22, 0.85);
             backdrop-filter: blur(12px);
         }
+        /* Permet de rendre l'icône du calendrier blanche sur les navigateurs web */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="bg-black text-slate-100 min-h-screen flex flex-col justify-between selection:bg-djgold-500 selection:text-black">
