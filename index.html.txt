@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning de Soirée</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        djpurple: {
+                            400: '#a855f7',
+                            500: '#8a1c91',
+                            600: '#701278',
+                            700: '#580c5f',
+                            900: '#140516'
+                        },
+                        djgold: {
+                            400: '#f59e0b',
+                            500: '#d49b28',
+                            600: '#b87f18',
+                            700: '#8c5d0d'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .gradient-gold-text {
+            background: linear-gradient(135deg, #fef08a 0%, #d49b28 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gradient-dj-border {
+            border-image: linear-gradient(135deg, #8a1c91, #d49b28) 1;
+        }
+        .bg-dj-card {
+            background: rgba(20, 5, 22, 0.85);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-black text-slate-100 min-h-screen flex flex-col justify-between selection:bg-djgold-500 selection:text-black">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-100px] opacity-0 transition-all duration-300 bg-gradient-to-r from-djgold-500 to-amber-600 text-slate-950 font-bold px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 text-sm">
+        <i data-lucide="check-circle" class="w-5 h-5 text-slate-950"></i>
+        <span id="toast-text">Message prêt !</span>
+    </div>
+
+    <!-- Email Modal -->
+    <div id="email-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="bg-djpurple-900 border border-djpurple-600/50 rounded-3xl p-6 max-w-lg w-full space-y-5 shadow-2xl relative">
+            <button onclick="closeEmailModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-black/60 border border-djgold-500/40 flex items-center justify-center shrink-0 text-djgold-400">
+                    <i data-lucide="mail" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="font-extrabold text-white text-base">Envoyer au DJ</h3>
+                    <p class="text-xs text-djgold-400 font-medium">djice022@gmail.com</p>
+                </div>
+            </div>
+
+            <div class="bg-black/80 border border-slate-800 rounded-2xl p-4 space-y-2">
+                <div class="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-slate-800">
+                    <span>Destinataire : <strong class="text-djgold-400">djice022@gmail.com</strong></span>
+                </div>
+                <div id="modal-preview" class="text-xs font-mono text-slate-300 max-h-48 overflow-y-auto whitespace-pre-wrap pt-1">
+                    <!-- Dynamic preview text -->
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <a id="btn-open-mailto" href="#" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-djpurple-600 via-djpurple-500 to-djgold-500 hover:opacity-95 text-white font-bold text-sm shadow-lg shadow-djpurple-600/30 flex items-center justify-center gap-2.5 transition-all text-center">
+                    <i data-lucide="mail" class="w-4 h-4"></i>
+                    <span>Ouvrir dans ma boîte mail</span>
+                </a>
+
+                <button onclick="copyMailBody()" class="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-800 flex items-center justify-center gap-2 transition-all">
+                    <i data-lucide="copy" class="w-4 h-4 text-djgold-400"></i>
+                    <span>Copier le texte complet de l'e-mail</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Header -->
+    <header class="border-b border-djpurple-700/40 bg-black/90 backdrop-blur-xl sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl w-full mx-auto px-4 py-6 space-y-6 flex-1">
+
+        <!-- Welcome Banner -->
+        <div class="bg-gradient-to-r from-djpurple-900/60 via-black to-djpurple-900/60 border border-djpurple-600/30 rounded-3xl p-5 sm:p-6 text-center space-y-3 shadow-2xl relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-djgold-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="absolute -left-10 -top-10 w-40 h-40 bg-djpurple-500/20 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <h2 class="text-xl sm:text-2xl font-black text-white">Préparez le programme parfait pour votre soirée</h2>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto">
+                Complétez les horaires, vos musiques clés et remarques, puis envoyez directement votre programme au DJ !
+            </p>
+        </div>
+
+        <!-- STEP 1: Quick Infos -->
+        <section class="bg-dj-card border border-djpurple-700/30 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+            <div class="flex items-center gap-2 text-djgold-400 font-bold text-xs uppercase tracking-wider">
+                <i data-lucide="user" class="w-4 h-4 text-djpurple-400"></i>
+                <span>1. Vos Informations</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Vos Noms / Prénoms</label>
+                    <input type="text" id="client-names" oninput="saveData()" placeholder="Ex: Sophie & Alexandre" class="w-full bg-black/60 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-djgold-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Date de l'événement</label>
+                    <input type="date" id="event-date" oninput="saveData()" class="w-full bg-black/60 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-djgold-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Lieu / Salle</label>
+                    <input type="text" id="event-location" oninput="saveData()" placeholder="Ex: Château des Fêtes" class="w-full bg-black/60 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-djgold-500 transition-colors">
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 2: Choose Template Cards -->
+        <section class="space-y-3">
+            <div class="flex items-center gap-2 text-djgold-400 font-bold text-xs uppercase tracking-wider">
+                <i data-lucide="sparkles" class="w-4 h-4 text-djpurple-400"></i>
+                <span>2. Choisissez votre type de soirée</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button onclick="applyTemplate('mariage')" id="btn-mariage" class="p-4 rounded-2xl bg-dj-card border border-slate-800 hover:border-djgold-500/60 text-left transition-all group flex flex-col justify-between h-32 relative overflow-hidden">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-2xl">💍</span>
+                        <span class="text-[10px] font-bold bg-djpurple-500/20 text-djpurple-400 px-2 py-0.5 rounded-md border border-djpurple-500/30">Modèle Mariage</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white group-hover:text-djgold-400 transition-colors">Mariage</h3>
+                        <p class="text-xs text-slate-400">Cocktail, entrée, ouverture de bal, gâteau...</p>
+                    </div>
+                </button>
+
+                <button onclick="applyTemplate('anniversaire')" id="btn-anniversaire" class="p-4 rounded-2xl bg-dj-card border border-slate-800 hover:border-djgold-500/60 text-left transition-all group flex flex-col justify-between h-32 relative overflow-hidden">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-2xl">🎂</span>
+                        <span class="text-[10px] font-bold bg-djgold-500/20 text-djgold-400 px-2 py-0.5 rounded-md border border-djgold-500/30">Modèle Anniv</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white group-hover:text-djgold-400 transition-colors">Anniversaire</h3>
+                        <p class="text-xs text-slate-400">Apéro, bougies, animation & dancefloor...</p>
+                    </div>
+                </button>
+
+                <button onclick="applyTemplate('prive')" id="btn-prive" class="p-4 rounded-2xl bg-dj-card border border-slate-800 hover:border-djgold-500/60 text-left transition-all group flex flex-col justify-between h-32 relative overflow-hidden">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-2xl">🍸</span>
+                        <span class="text-[10px] font-bold bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-md border border-purple-500/30">Soirée Privée</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white group-hover:text-djgold-400 transition-colors">Soirée Privée</h3>
+                        <p class="text-xs text-slate-400">Lounge, DJ set clubbing & ambiance...</p>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <!-- STEP 3: Planning Items -->
+        <section class="bg-dj-card border border-djpurple-700/30 rounded-2xl p-5 sm:p-6 shadow-xl space-y-5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2 text-djgold-400 font-bold text-xs uppercase tracking-wider">
+                    <i data-lucide="clock" class="w-4 h-4 text-djpurple-400"></i>
+                    <span>3. Le programme de votre soirée</span>
+                </div>
+                <button onclick="addStep()" class="px-3 py-1.5 rounded-xl bg-djpurple-600/30 text-djgold-400 hover:bg-djpurple-600/50 text-xs font-semibold border border-djpurple-500/40 transition-all flex items-center gap-1.5">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Ajouter un moment</span>
+                </button>
+            </div>
+
+            <div id="steps-container" class="space-y-3.5">
+                <!-- Injected dynamically -->
+            </div>
+
+            <div class="pt-2">
+                <button onclick="addStep()" class="w-full py-3.5 rounded-2xl border border-dashed border-slate-800 hover:border-djgold-500/50 text-slate-400 hover:text-djgold-400 text-xs font-medium transition-all flex items-center justify-center gap-2 bg-black/40">
+                    <i data-lucide="plus-circle" class="w-4 h-4 text-djpurple-400"></i>
+                    <span>Cliquer ici pour ajouter une étape supplémentaire</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- STEP 4: Direct Action Card -->
+        <section class="bg-gradient-to-r from-djpurple-900/60 via-black to-djpurple-900/60 border border-djgold-500/40 rounded-3xl p-6 text-center space-y-4 shadow-2xl relative">
+            <div class="w-12 h-12 bg-djgold-500/10 text-djgold-400 rounded-2xl flex items-center justify-center mx-auto border border-djgold-500/30">
+                <i data-lucide="send" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-white">Prêt à transmettre votre programme ?</h3>
+                <p class="text-xs text-slate-300 max-w-md mx-auto mt-1">
+                    Envoyez votre programme complet en un seul clic au <span class="text-djgold-400 font-bold">DJ</span>.
+                </p>
+            </div>
+            <div class="flex items-center justify-center pt-2">
+                <button onclick="openEmailModal()" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-djgold-500 to-amber-600 hover:from-djgold-600 hover:to-amber-700 text-slate-950 font-extrabold text-sm transition-all shadow-xl shadow-djgold-500/25 flex items-center justify-center gap-3">
+                    <i data-lucide="send" class="w-5 h-5"></i>
+                    <span>Envoyer directement mon programme au DJ</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-500 space-y-1">
+        <p class="font-semibold text-slate-400">Animation & Mix Événementiel</p>
+        <p class="text-[11px] text-slate-600">Contact : djice022@gmail.com • Vos modifications sont enregistrées sur cet appareil</p>
+    </footer>
+
+    <script>
+        const DJ_EMAIL = "djice022@gmail.com";
+
+        // Default presets for ultra-simple client onboarding
+        const templates = {
+            mariage: [
+                { time: "18:00", title: "Cocktail / Vin d'honneur", song: "Ambiance Lounge & Soft Pop", note: "Musique douce en extérieur" },
+                { time: "20:00", title: "Entrée des Mariés en Salle", song: "Bruno Mars - Uptown Funk", note: "Haute énergie, accueil du public" },
+                { time: "20:30", title: "Repas & Discours", song: "Fond musical chill", note: "Micros prêtés pour les prises de parole" },
+                { time: "22:30", title: "Ouverture de Bal", song: "Ed Sheeran - Perfect", note: "Éclairage chaleureux & romantique" },
+                { time: "23:00", title: "Gâteau des Mariés", song: "Coldplay - A Sky Full of Stars", note: "Arrivée féerique du dessert" },
+                { time: "23:15", title: "Lancement du Dancefloor", song: "Hits Généralistes, Années 80/90, Pop, Electro", note: "Grosse ambiance jusqu'au bout de la nuit !" }
+            ],
+            anniversaire: [
+                { time: "19:30", title: "Accueil & Aperitif", song: "Hits Funk & Pop 90/2000", note: "Ambiance festive dès l'arrivée" },
+                { time: "21:00", title: "Buffet ou Dîner", song: "Fond musical dynamique", note: "Volume modéré pour discuter" },
+                { time: "22:30", title: "Bougies & Gâteau", song: "Stevie Wonder - Happy Birthday", note: "Annonce au micro" },
+                { time: "22:45", title: "Ouverture du Dancefloor", song: "Dua Lipa / Hits Actuels", note: "Place à la danse !" }
+            ],
+            prive: [
+                { time: "20:00", title: "Accueil Cocktail", song: "Deep House & Chill Lounge", note: "Ambiance chic" },
+                { time: "21:30", title: "Montée en puissance DJ Set", song: "House, Disco & Commercial Hits", note: "Lights show" },
+                { time: "02:00", title: "Clôture de soirée", song: "Track de fin", note: "Fin progressive" }
+            ]
+        };
+
+        let currentSteps = [];
+
+        // App Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedData();
+            lucide.createIcons();
+        });
+
+        function loadSavedData() {
+            const savedData = localStorage.getItem('dj_ice_client_planning');
+            if (savedData) {
+                try {
+                    const parsed = JSON.parse(savedData);
+                    document.getElementById('client-names').value = parsed.names || '';
+                    document.getElementById('event-date').value = parsed.date || '';
+                    document.getElementById('event-location').value = parsed.location || '';
+                    currentSteps = parsed.steps || templates.mariage;
+                } catch(e) {
+                    currentSteps = templates.mariage;
+                }
+            } else {
+                currentSteps = templates.mariage;
+            }
+            renderSteps();
+        }
+
+        function saveData() {
+            const names = document.getElementById('client-names').value;
+            const date = document.getElementById('event-date').value;
+            const location = document.getElementById('event-location').value;
+
+            const payload = {
+                names,
+                date,
+                location,
+                steps: currentSteps
+            };
+
+            localStorage.setItem('dj_ice_client_planning', JSON.stringify(payload));
+        }
+
+        function applyTemplate(type) {
+            if (templates[type]) {
+                currentSteps = JSON.parse(JSON.stringify(templates[type]));
+                renderSteps();
+                saveData();
+                showToast(`Modèle "${type.toUpperCase()}" chargé !`);
+            }
+        }
+
+        function renderSteps() {
+            const container = document.getElementById('steps-container');
+            container.innerHTML = '';
+
+            currentSteps.forEach((step, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-black/70 border border-slate-800/80 rounded-2xl p-4 transition-all hover:border-djpurple-600/50 space-y-3 relative group";
+                
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <input type="time" value="${step.time}" onchange="updateStep(${index}, 'time', this.value)" class="bg-djpurple-900/60 border border-djpurple-700/50 rounded-xl px-2.5 py-1.5 text-xs font-mono font-bold text-djgold-400 focus:outline-none focus:border-djgold-500">
+                            <input type="text" value="${escapeHtml(step.title)}" oninput="updateStep(${index}, 'title', this.value)" placeholder="Titre du moment..." class="w-full sm:w-64 bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-djgold-500">
+                        </div>
+                        <button onclick="removeStep(${index})" class="p-2 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors" title="Supprimer">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                        <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800/80">
+                            <i data-lucide="disc" class="w-3.5 h-3.5 text-djpurple-400 shrink-0"></i>
+                            <input type="text" value="${escapeHtml(step.song || '')}" oninput="updateStep(${index}, 'song', this.value)" placeholder="Musique / Chanson souhaitée..." class="w-full bg-transparent text-xs text-slate-200 placeholder-slate-500 focus:outline-none">
+                        </div>
+                        <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800/80">
+                            <i data-lucide="message-square" class="w-3.5 h-3.5 text-djgold-400 shrink-0"></i>
+                            <input type="text" value="${escapeHtml(step.note || '')}" oninput="updateStep(${index}, 'note', this.value)" placeholder="Remarque ou consigne..." class="w-full bg-transparent text-xs text-slate-200 placeholder-slate-500 focus:outline-none">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        function updateStep(index, field, value) {
+            if (currentSteps[index]) {
+                currentSteps[index][field] = value;
+                saveData();
+            }
+        }
+
+        function addStep() {
+            let lastTime = "21:00";
+            if (currentSteps.length > 0) {
+                lastTime = currentSteps[currentSteps.length - 1].time;
+            }
+            currentSteps.push({
+                time: lastTime,
+                title: "Nouveau moment",
+                song: "",
+                note: ""
+            });
+            renderSteps();
+            saveData();
+        }
+
+        function removeStep(index) {
+            currentSteps.splice(index, 1);
+            renderSteps();
+            saveData();
+        }
+
+        // Email Summary Generation
+        function buildEmailContent() {
+            const names = document.getElementById('client-names').value || 'Client';
+            const date = document.getElementById('event-date').value || 'Non précisée';
+            const location = document.getElementById('event-location').value || 'Non précisé';
+
+            let subject = `Planning de soirée - ${names} (${date})`;
+            let text = `Bonjour,\n\nVoici le programme complet de notre soirée :\n\n`;
+            text += `👤 Nom(s) Client(s) : ${names}\n`;
+            text += `📅 Date de l'événement : ${date}\n`;
+            text += `📍 Lieu / Salle : ${location}\n\n`;
+            text += `====================================\n`;
+            text += `PROGRAMME DE LA SOIRÉE\n`;
+            text += `====================================\n\n`;
+
+            currentSteps.forEach(s => {
+                text += `⏰ [${s.time}] - ${s.title}\n`;
+                if (s.song) text += `   🎵 Musique : ${s.song}\n`;
+                if (s.note) text += `   💡 Note : ${s.note}\n`;
+                text += `\n`;
+            });
+
+            text += `====================================\n`;
+            text += `Merci, à très vite !`;
+
+            return { subject, text };
+        }
+
+        function openEmailModal() {
+            const { subject, text } = buildEmailContent();
+            
+            document.getElementById('modal-preview').textContent = text;
+            
+            const mailtoUrl = `mailto:${DJ_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+            document.getElementById('btn-open-mailto').href = mailtoUrl;
+
+            document.getElementById('email-modal').classList.remove('hidden');
+        }
+
+        function closeEmailModal() {
+            document.getElementById('email-modal').classList.add('hidden');
+        }
+
+        function copyMailBody() {
+            const { text } = buildEmailContent();
+            
+            const tempInput = document.createElement("textarea");
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+
+            showToast("Texte copié ! Vous pouvez le coller dans votre e-mail.");
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-text').textContent = msg;
+            toast.classList.remove('translate-y-[-100px]', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-[-100px]', 'opacity-0');
+            }, 3500);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
